@@ -7,9 +7,22 @@ type navItem struct {
 var navItems = []navItem{
 	{"dashboard", "Dashboard", "/"},
 	{"upload", "Unggah Data", "/upload"},
+}
+
+// settingsItems are grouped under the "Pengaturan" dropdown.
+var settingsItems = []navItem{
 	{"status", "Status", "/settings/status"},
 	{"products", "Produk", "/settings/products"},
 	{"sku-mapping", "Pemetaan SKU", "/settings/sku-mapping"},
+}
+
+func isSettings(active string) bool {
+	for _, n := range settingsItems {
+		if n.key == active {
+			return true
+		}
+	}
+	return false
 }
 
 // htmxConfig lets HTMX swap 4xx/5xx responses so inline errors and the
@@ -35,15 +48,41 @@ templ Layout(title string, active string) {
 				<nav class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
 					<a href="/" class="font-semibold text-emerald-700">BIOTA Sales Insight</a>
 					<div class="flex flex-wrap items-center gap-x-1 gap-y-1 text-sm">
-						for i, n := range navItems {
-							if i == 2 {
-								<span class="ml-3 mr-1 text-xs uppercase tracking-wide text-slate-400">Pengaturan</span>
-							}
+						for _, n := range navItems {
 							<a
 								href={ templ.SafeURL(n.href) }
 								class={ "rounded-md px-3 py-1.5", templ.KV("bg-emerald-50 font-medium text-emerald-800", n.key == active), templ.KV("text-slate-600 hover:bg-slate-100", n.key != active) }
 							>{ n.label }</a>
 						}
+						<div class="relative" x-data="{ open: false }" @keydown.escape.window="open = false" @click.outside="open = false">
+							<button
+								type="button"
+								class={ "inline-flex items-center gap-1 rounded-md px-3 py-1.5", templ.KV("bg-emerald-50 font-medium text-emerald-800", isSettings(active)), templ.KV("text-slate-600 hover:bg-slate-100", !isSettings(active)) }
+								aria-haspopup="menu"
+								:aria-expanded="open.toString()"
+								@click="open = !open"
+							>
+								Pengaturan
+								<svg class="h-4 w-4 transition-transform" :class="open && 'rotate-180'" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+									<path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path>
+								</svg>
+							</button>
+							<div
+								x-show="open"
+								x-cloak
+								x-transition.origin.top.left
+								role="menu"
+								class="absolute left-0 z-20 mt-1 w-48 rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+							>
+								for _, n := range settingsItems {
+									<a
+										href={ templ.SafeURL(n.href) }
+										role="menuitem"
+										class={ "block px-4 py-2", templ.KV("bg-emerald-50 font-medium text-emerald-800", n.key == active), templ.KV("text-slate-700 hover:bg-slate-100", n.key != active) }
+									>{ n.label }</a>
+								}
+							</div>
+						</div>
 					</div>
 				</nav>
 			</header>
