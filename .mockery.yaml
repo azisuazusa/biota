@@ -1,0 +1,11 @@
+# mockery v3 configuration
+template: testify
+dir: services/sales/mocks
+pkgname: mocks
+filename: "{{.InterfaceName}}.go"
+structname: "{{.InterfaceName}}"
+packages:
+  github.com/azisuazusa/biota/services/sales:
+    interfaces:
+      DatasetRepo:
+      ConfigRepo:

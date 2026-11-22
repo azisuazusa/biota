@@ -1,0 +1,22 @@
+package components
+
+// Flash is a dismissible red alert rendered into #flash.
+templ Flash(msg string) {
+	<div x-data="{ open: true }" x-show="open" role="alert" class="mb-4 flex items-start justify-between gap-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+		<span>{ msg }</span>
+		<button type="button" x-on:click="open = false" class="font-semibold text-red-700 hover:text-red-900" aria-label="Tutup">&times;</button>
+	</div>
+}
+
+// Notice is a dismissible green confirmation rendered into #flash.
+templ Notice(msg string) {
+	<div x-data="{ open: true }" x-show="open" x-init="setTimeout(() => open = false, 3000)" role="status" class="mb-4 flex items-start justify-between gap-4 rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+		<span>{ msg }</span>
+		<button type="button" x-on:click="open = false" class="font-semibold" aria-label="Tutup">&times;</button>
+	</div>
+}
+
+// InlineError is a non-dismissible red message shown inside a section.
+templ InlineError(msg string) {
+	<div role="alert" class="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">{ msg }</div>
+}

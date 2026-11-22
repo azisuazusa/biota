@@ -1,0 +1,52 @@
+package views
+
+import "github.com/azisuazusa/biota/services/sales"
+
+templ ProductSettingsPage(products []sales.ProductInfo) {
+	@Layout("Pengaturan Produk", "products") {
+		<h1 class="mb-1 text-2xl font-semibold text-slate-900">Pengaturan Produk</h1>
+		<p class="mb-6 text-sm text-slate-500">Nama tampilan dipakai di tabel dan grafik. Kosongkan untuk kembali ke nama bawaan (nama listing yang paling sering muncul).</p>
+		@ProductTable(products)
+	}
+}
+
+templ ProductTable(products []sales.ProductInfo) {
+	<div id="product-table">
+		@Section("Produk") {
+			if len(products) == 0 {
+				<p class="py-6 text-center text-sm text-slate-500">Belum ada produk.</p>
+			} else {
+				<div class="overflow-x-auto">
+					<table class="w-full text-sm">
+						<thead class="text-left text-slate-500">
+							<tr><th class="py-2 pr-3 font-medium">SKU</th><th class="py-2 pr-3 font-medium">Nama default</th><th class="py-2 font-medium">Nama tampilan</th></tr>
+						</thead>
+						<tbody class="divide-y divide-slate-100">
+							for _, p := range products {
+								<tr>
+									<td class="py-2 pr-3 font-mono text-xs">{ p.SKU }</td>
+									<td class="py-2 pr-3 text-slate-600">{ p.DefaultName }</td>
+									<td class="py-2">
+										<input
+											type="text"
+											name="name"
+											value={ p.Override }
+											placeholder={ p.DefaultName }
+											maxlength="200"
+											hx-post="/settings/products"
+											hx-trigger="change"
+											hx-vals={ kv("sku", p.SKU) }
+											hx-target="#product-table"
+											hx-swap="outerHTML"
+											class="w-full min-w-64 rounded-md border border-slate-300 px-2 py-1.5"
+										/>
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			}
+		}
+	</div>
+}

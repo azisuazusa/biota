@@ -1,0 +1,170 @@
+package views
+
+import (
+	"github.com/azisuazusa/biota/app/http/views/components"
+	"github.com/azisuazusa/biota/services/sales"
+)
+
+templ ReviewPage(p *sales.PendingImport, errMsg string) {
+	@Layout("Tinjau Impor", "upload") {
+		@ReviewBody(p, nil, errMsg)
+	}
+}
+
+// ReviewBody is the swappable review content; d pre-fills the user's answers
+// when the form is re-rendered after a validation error.
+templ ReviewBody(p *sales.PendingImport, d *sales.ReviewDecision, errMsg string) {
+	<div id="review" class="space-y-6">
+		<div>
+			<h1 class="text-2xl font-semibold text-slate-900">Tinjau Impor</h1>
+			<p class="mt-1 text-sm text-slate-500">File <span class="font-medium text-slate-700">{ p.FileName }</span></p>
+		</div>
+		<div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+			for _, c := range reviewCounts(p) {
+				<div class={ "rounded-lg border bg-white p-3", templ.KV("border-amber-300", c.warn), templ.KV("border-slate-200", !c.warn) }>
+					<p class="text-xs text-slate-500">{ c.label }</p>
+					<p class="mt-1 text-xl font-semibold tabular-nums">{ FormatInt(c.value) }</p>
+				</div>
+			}
+		</div>
+		if errMsg != "" {
+			@components.InlineError(errMsg)
+		}
+		<form id="review-form" x-data="{ ok: false }" x-init="ok = $el.checkValidity()" x-on:input="ok = $el.checkValidity()" x-on:change="ok = $el.checkValidity()" hx-post="/upload/confirm" hx-target="#review" hx-swap="outerHTML" hx-disabled-elt="find button" class="space-y-6">
+			<input type="hidden" name="token" value={ p.Token }/>
+			if len(p.ParseErrors) > 0 {
+				@Section("Baris gagal dibaca") {
+					<p class="mb-3 text-sm text-slate-500">Baris berikut akan dilewati saat impor.</p>
+					<div class="max-h-96 overflow-auto">
+						<table class="w-full text-sm">
+							<thead class="text-left text-slate-500">
+								<tr><th class="py-2 pr-3 font-medium">Baris</th><th class="py-2 pr-3 font-medium">Kolom</th><th class="py-2 pr-3 font-medium">Nilai</th><th class="py-2 font-medium">Alasan</th></tr>
+							</thead>
+							<tbody class="divide-y divide-slate-100">
+								for _, e := range p.ParseErrors {
+									<tr>
+										<td class="py-2 pr-3 tabular-nums">{ FormatInt(e.Line) }</td>
+										<td class="py-2 pr-3 font-mono text-xs">{ e.Column }</td>
+										<td class="py-2 pr-3 font-mono text-xs">{ e.Value }</td>
+										<td class="py-2 text-red-700">{ e.Reason }</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				}
+			}
+			if len(p.Warnings) > 0 {
+				<section class="rounded-xl border border-amber-300 bg-amber-50 p-5">
+					<h2 class="mb-1 text-base font-semibold text-amber-900">Peringatan</h2>
+					<p class="mb-3 text-sm text-amber-800">Baris tetap diimpor. Tidak perlu tindakan.</p>
+					<div class="max-h-96 overflow-auto">
+						<table class="w-full text-sm text-amber-900">
+							<thead class="text-left">
+								<tr><th class="py-2 pr-3 font-medium">Baris</th><th class="py-2 pr-3 font-medium">Order ID</th><th class="py-2 pr-3 font-medium">Channel</th><th class="py-2 font-medium">Pesan</th></tr>
+							</thead>
+							<tbody class="divide-y divide-amber-200">
+								for _, w := range p.Warnings {
+									<tr>
+										<td class="py-2 pr-3 tabular-nums">{ FormatInt(w.Line) }</td>
+										<td class="py-2 pr-3 font-mono text-xs">{ w.OrderID }</td>
+										<td class="py-2 pr-3">{ string(w.Channel) }</td>
+										<td class="py-2">{ w.Message }</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				</section>
+			}
+			if len(p.Duplicates) > 0 {
+				@Section("Duplikat") {
+					<p class="mb-3 text-sm text-slate-500">Baris yang identik di semua kolom. Secara bawaan hanya satu salinan yang disimpan; centang "Simpan duplikat" untuk menyimpan semua salinan.</p>
+					<div class="max-h-[32rem] overflow-auto">
+						<table class="w-full text-sm">
+							<thead class="text-left text-slate-500">
+								<tr>
+									<th class="py-2 pr-3 font-medium">Baris</th>
+									<th class="py-2 pr-3 font-medium">Order ID</th>
+									<th class="py-2 pr-3 font-medium">Produk</th>
+									<th class="py-2 pr-3 text-right font-medium">Jumlah</th>
+									<th class="py-2 pr-3 text-right font-medium">Total</th>
+									<th class="py-2 pr-3 font-medium">Status</th>
+									<th class="py-2 font-medium"></th>
+								</tr>
+							</thead>
+							<tbody class="divide-y divide-slate-100">
+								for _, g := range p.Duplicates {
+									<tr>
+										<td class="py-2 pr-3 tabular-nums">{ joinLines(g.Lines) } <span class="text-slate-400">({ FormatInt(len(g.Lines)) }×)</span></td>
+										<td class="py-2 pr-3 font-mono text-xs">{ g.Line.OrderID }</td>
+										<td class="py-2 pr-3">{ g.Line.ProductName }</td>
+										<td class="py-2 pr-3 text-right tabular-nums">{ FormatInt(g.Line.Qty) }</td>
+										<td class="py-2 pr-3 text-right tabular-nums">{ FormatIDR(g.Line.TotalPrice) }</td>
+										<td class="py-2 pr-3">{ g.Line.Status }</td>
+										<td class="py-2">
+											<label class="inline-flex items-center gap-1.5 whitespace-nowrap">
+												<input type="checkbox" name={ "keep_dup[" + g.Key + "]" } checked?={ keepDup(d, g.Key) } class="h-4 w-4 accent-emerald-600"/>
+												Simpan duplikat
+											</label>
+										</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				}
+			}
+			if len(p.Unresolved) > 0 {
+				@Section("SKU belum dikenali") {
+					<p class="mb-3 text-sm text-slate-500">Pilih SKU yang sudah ada atau ketik SKU baru. Pilihan disimpan untuk unggahan berikutnya.</p>
+					<div class="space-y-3">
+						for i, u := range p.Unresolved {
+							<div class="flex flex-wrap items-center gap-3">
+								<div class="min-w-64 flex-1 text-sm">
+									<p class="font-medium">{ u.ProductName }</p>
+									<p class="text-xs text-slate-500">
+										Baris { joinLines(u.Lines) }
+										if len(u.CandidateSKUs) > 0 {
+											· dipetakan ke lebih dari satu SKU di file ini
+										}
+									</p>
+								</div>
+								<input type="text" list={ listID(i) } name={ "sku[" + u.ProductName + "]" } value={ skuChoice(d, u.ProductName) } required maxlength="64" placeholder="SKU" class="w-56 rounded-md border border-slate-300 px-2 py-1.5 text-sm"/>
+								<datalist id={ listID(i) }>
+									for _, s := range skuOptions(p, u) {
+										<option value={ s }></option>
+									}
+								</datalist>
+							</div>
+						}
+					</div>
+				}
+			}
+			if len(p.UnknownStatus) > 0 {
+				@Section("Status baru") {
+					<p class="mb-3 text-sm text-slate-500">Tentukan apakah status ini dihitung dalam pendapatan bersih.</p>
+					<div class="space-y-3">
+						for _, u := range p.UnknownStatus {
+							<div class="flex flex-wrap items-center gap-4 text-sm">
+								<p class="min-w-64 flex-1"><span class="font-medium">{ u.Status }</span> <span class="text-slate-500">({ FormatInt(u.Count) } baris)</span></p>
+								<label class="inline-flex items-center gap-1.5">
+									<input type="radio" name={ "status[" + u.Status + "]" } value="include" required checked?={ statusChoice(d, u.Status, sales.StatusIncluded) } class="accent-emerald-600"/>
+									Masuk pendapatan
+								</label>
+								<label class="inline-flex items-center gap-1.5">
+									<input type="radio" name={ "status[" + u.Status + "]" } value="exclude" required checked?={ statusChoice(d, u.Status, sales.StatusExcluded) } class="accent-emerald-600"/>
+									Tidak dihitung
+								</label>
+							</div>
+						}
+					</div>
+				}
+			}
+			<div class="flex items-center gap-3">
+				<button type="submit" x-bind:disabled="!ok" class="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50">Konfirmasi impor</button>
+				<button type="button" hx-post="/upload/cancel" hx-vals={ templ.JSONString(map[string]string{"token": p.Token}) } class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Batal</button>
+			</div>
+		</form>
+	</div>
+}

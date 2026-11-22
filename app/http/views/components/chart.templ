@@ -1,0 +1,11 @@
+package components
+
+// Chart renders a canvas plus its data as a JSON script block. The Alpine
+// "chart" component (static/js/charts.js) builds the Chart.js instance and
+// destroys it when HTMX swaps the element out.
+templ Chart(id, kind string, data any) {
+	<div class="relative h-72" x-data={ "chart('" + id + "','" + kind + "')" }>
+		<canvas id={ id } x-ref="canvas"></canvas>
+		@templ.JSONScript(id+"-data", data)
+	</div>
+}

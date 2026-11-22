@@ -1,0 +1,83 @@
+package views
+
+import (
+	"github.com/azisuazusa/biota/services/sales"
+)
+
+
+templ StatusSettingsPage(cfg *sales.Config) {
+	@Layout("Pengaturan Status", "status") {
+		<h1 class="mb-1 text-2xl font-semibold text-slate-900">Pengaturan Status</h1>
+		<p class="mb-6 text-sm text-slate-500">Status yang "Masuk pendapatan" dihitung dalam pendapatan bersih. Perubahan langsung berlaku pada data saat ini.</p>
+		@StatusTable(cfg)
+	}
+}
+
+templ StatusTable(cfg *sales.Config) {
+	<div id="status-table" class="space-y-6">
+		@Section("Status") {
+			<table class="w-full text-sm">
+				<thead class="text-left text-slate-500">
+					<tr><th class="py-2 pr-3 font-medium">Status</th><th class="py-2 pr-3 font-medium">Klasifikasi</th><th class="py-2 text-right font-medium">Hapus</th></tr>
+				</thead>
+				<tbody class="divide-y divide-slate-100">
+					for _, row := range StatusRows(cfg) {
+						<tr>
+							<td class="py-2 pr-3">{ row.Label }</td>
+							<td class="py-2 pr-3">
+								<select
+									name="class"
+									hx-post="/settings/status"
+									hx-trigger="change"
+									hx-vals={ kv("status", row.Label) }
+									hx-target="#status-table"
+									hx-swap="outerHTML"
+									class={ "rounded-md border px-2 py-1", templ.KV("border-emerald-300 bg-emerald-50 text-emerald-800", row.Class == sales.StatusIncluded), templ.KV("border-slate-300 bg-slate-50 text-slate-700", row.Class != sales.StatusIncluded) }
+								>
+									<option value="include" selected?={ row.Class == sales.StatusIncluded }>Masuk pendapatan</option>
+									<option value="exclude" selected?={ row.Class == sales.StatusExcluded }>Tidak dihitung</option>
+								</select>
+							</td>
+							<td class="py-2 text-right">
+								@inlineDelete(statusDeleteURL(row.Label), "", "#status-table")
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+		@Section("Tambah status") {
+			<form hx-post="/settings/status" hx-target="#status-table" hx-swap="outerHTML" class="flex flex-wrap items-end gap-3 text-sm">
+				<label>
+					<span class="mb-1 block text-slate-500">Status</span>
+					<input type="text" name="status" required class="w-64 rounded-md border border-slate-300 px-2 py-1.5"/>
+				</label>
+				<label>
+					<span class="mb-1 block text-slate-500">Klasifikasi</span>
+					<select name="class" class="rounded-md border border-slate-300 px-2 py-1.5">
+						<option value="include">Masuk pendapatan</option>
+						<option value="exclude">Tidak dihitung</option>
+					</select>
+				</label>
+				<button type="submit" class="rounded-md bg-emerald-600 px-4 py-1.5 font-medium text-white hover:bg-emerald-700">Tambah</button>
+			</form>
+		}
+	</div>
+}
+
+// inlineDelete is a delete button with an Alpine inline confirmation
+// (no browser confirm dialog). vals is an optional hx-vals JSON string.
+templ inlineDelete(deleteURL, vals, target string) {
+	<div x-data="{ ask: false }" class="inline-flex items-center gap-2">
+		<button type="button" x-show="!ask" x-on:click="ask = true" class="text-red-600 hover:text-red-800">Hapus</button>
+		<span x-show="ask" x-cloak class="inline-flex items-center gap-2">
+			<span class="text-slate-600">Yakin hapus?</span>
+			if vals != "" {
+				<button type="button" hx-delete={ deleteURL } hx-vals={ vals } hx-target={ target } hx-swap="outerHTML" class="rounded bg-red-600 px-2 py-0.5 text-white hover:bg-red-700">Ya, hapus</button>
+			} else {
+				<button type="button" hx-delete={ deleteURL } hx-target={ target } hx-swap="outerHTML" class="rounded bg-red-600 px-2 py-0.5 text-white hover:bg-red-700">Ya, hapus</button>
+			}
+			<button type="button" x-on:click="ask = false" class="text-slate-600 hover:text-slate-800">Batal</button>
+		</span>
+	</div>
+}

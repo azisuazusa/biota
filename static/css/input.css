@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@source "../../app/http/views/**/*.templ";
+
+[x-cloak] {
+  display: none !important;
+}

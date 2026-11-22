@@ -1,0 +1,165 @@
+package views
+
+import (
+	"github.com/azisuazusa/biota/app/http/views/components"
+	"github.com/azisuazusa/biota/services/sales"
+)
+
+templ DashboardPage(ds *sales.Dataset, f sales.Filter, s *sales.Summary, errMsg string) {
+	@Layout("Dashboard", "dashboard") {
+		<div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+			<div>
+				<h1 class="text-2xl font-semibold text-slate-900">Dashboard Penjualan</h1>
+				<p class="mt-1 text-sm text-slate-500">
+					File <span class="font-medium text-slate-700">{ ds.FileName }</span>
+					· Diunggah { FormatDateTimeID(ds.UploadedAt) }
+					· Periode { FormatDateID(ds.MinDate) } – { FormatDateID(ds.MaxDate) }
+				</p>
+			</div>
+		</div>
+		<form
+			id="filters"
+			class="mb-6 flex flex-wrap items-end gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+			hx-get="/dashboard/widgets"
+			hx-target="#widgets"
+			hx-trigger="change"
+			hx-push-url="true"
+			action="/"
+			method="get"
+		>
+			<input type="hidden" name="filtered" value="1"/>
+			<label class="text-sm">
+				<span class="mb-1 block text-slate-500">Dari</span>
+				<input type="date" name="from" value={ dateValue(f, true) } min={ ds.MinDate.Format("2006-01-02") } max={ ds.MaxDate.Format("2006-01-02") } class="rounded-md border border-slate-300 px-2 py-1.5"/>
+			</label>
+			<label class="text-sm">
+				<span class="mb-1 block text-slate-500">Sampai</span>
+				<input type="date" name="to" value={ dateValue(f, false) } min={ ds.MinDate.Format("2006-01-02") } max={ ds.MaxDate.Format("2006-01-02") } class="rounded-md border border-slate-300 px-2 py-1.5"/>
+			</label>
+			<fieldset class="text-sm">
+				<legend class="mb-1 block text-slate-500">Channel</legend>
+				<div class="flex flex-wrap gap-3 py-1.5">
+					for _, c := range sales.AllChannels {
+						<label class="inline-flex items-center gap-1.5">
+							<input type="checkbox" name="channel" value={ string(c) } checked?={ hasChannel(f, c) } class="h-4 w-4 accent-emerald-600"/>
+							{ string(c) }
+						</label>
+					}
+				</div>
+			</fieldset>
+			<noscript><button type="submit" class="rounded-md bg-emerald-600 px-3 py-1.5 text-white">Terapkan</button></noscript>
+		</form>
+		<div id="widgets">
+			@Widgets(s, errMsg)
+		</div>
+	}
+}
+
+templ DashboardEmpty() {
+	@Layout("Dashboard", "dashboard") {
+		<div class="rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center">
+			<p class="text-slate-600">Belum ada data. Unggah file CSV terlebih dahulu.</p>
+			<a href="/upload" class="mt-4 inline-block rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">Unggah Data</a>
+		</div>
+	}
+}
+
+templ noData() {
+	<p class="py-8 text-center text-sm text-slate-500">Tidak ada data untuk filter ini</p>
+}
+
+templ Widgets(s *sales.Summary, errMsg string) {
+	if errMsg != "" {
+		@components.InlineError(errMsg)
+	} else if s != nil {
+		<div class="space-y-6">
+			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+				@components.KPICard("Pendapatan Bersih", FormatIDR(s.NetRevenue))
+				@components.KPICard("Pesanan", FormatInt(s.Orders))
+				@components.KPICard("Unit Terjual", FormatInt(s.Units))
+				@components.KPICard("Rata-rata Nilai Pesanan (AOV)", FormatIDR(s.AOV))
+			</div>
+			<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+				@Section("Pendapatan per Channel") {
+					if s.Orders == 0 {
+						@noData()
+					} else {
+						<div class="overflow-x-auto">
+							<table class="w-full text-sm">
+								<thead class="text-left text-slate-500">
+									<tr>
+										<th class="py-2 pr-3 font-medium">Channel</th>
+										<th class="py-2 pr-3 text-right font-medium">Pesanan</th>
+										<th class="py-2 pr-3 text-right font-medium">Unit</th>
+										<th class="py-2 pr-3 text-right font-medium">Pendapatan Bersih</th>
+										<th class="py-2 text-right font-medium">%</th>
+									</tr>
+								</thead>
+								<tbody class="divide-y divide-slate-100">
+									for _, c := range s.ByChannel {
+										<tr>
+											<td class="py-2 pr-3">{ string(c.Channel) }</td>
+											<td class="py-2 pr-3 text-right tabular-nums">{ FormatInt(c.Orders) }</td>
+											<td class="py-2 pr-3 text-right tabular-nums">{ FormatInt(c.Units) }</td>
+											<td class="py-2 pr-3 text-right tabular-nums">{ FormatIDR(c.NetRevenue) }</td>
+											<td class="py-2 text-right tabular-nums">{ FormatPct(c.SharePct) }</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						</div>
+						<div class="mt-4">
+							@components.Chart("chart-channel", "bar", channelChart(s))
+						</div>
+					}
+				}
+				@Section("Top 10 Produk") {
+					if s.Orders == 0 {
+						@noData()
+					} else {
+						@components.Chart("chart-top10", "hbar", topChart(s))
+					}
+				}
+			</div>
+			@Section("Pendapatan per Produk") {
+				if s.Orders == 0 {
+					@noData()
+				} else {
+					<div class="overflow-x-auto">
+						<table class="w-full text-sm">
+							<thead class="text-left text-slate-500">
+								<tr>
+									<th class="py-2 pr-3 font-medium">Rank</th>
+									<th class="py-2 pr-3 font-medium">SKU</th>
+									<th class="py-2 pr-3 font-medium">Nama Produk</th>
+									<th class="py-2 pr-3 text-right font-medium">Unit</th>
+									<th class="py-2 pr-3 text-right font-medium">Pendapatan Bersih</th>
+									<th class="py-2 text-right font-medium">%</th>
+								</tr>
+							</thead>
+							<tbody class="divide-y divide-slate-100">
+								for _, p := range s.ByProduct {
+									<tr>
+										<td class="py-2 pr-3 tabular-nums">{ FormatInt(p.Rank) }</td>
+										<td class="py-2 pr-3 font-mono text-xs">{ p.SKU }</td>
+										<td class="py-2 pr-3">{ p.DisplayName }</td>
+										<td class="py-2 pr-3 text-right tabular-nums">{ FormatInt(p.Units) }</td>
+										<td class="py-2 pr-3 text-right tabular-nums">{ FormatIDR(p.NetRevenue) }</td>
+										<td class="py-2 text-right tabular-nums">{ FormatPct(p.SharePct) }</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				}
+			}
+			@Section("Tren Pendapatan Harian") {
+				if s.Orders == 0 {
+					@noData()
+				} else {
+					@components.Chart("chart-daily", "line", dailyChart(s))
+				}
+			}
+		</div>
+	}
+}

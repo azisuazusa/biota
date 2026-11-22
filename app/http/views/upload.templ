@@ -1,0 +1,29 @@
+package views
+
+import "strconv"
+
+templ UploadPage(maxMB int) {
+	@Layout("Unggah Data", "upload") {
+		<div class="mx-auto max-w-xl">
+			<h1 class="mb-1 text-2xl font-semibold text-slate-900">Unggah Data</h1>
+			<p class="mb-6 text-sm text-slate-500">Unggahan baru akan menggantikan seluruh data sebelumnya.</p>
+			<form
+				hx-post="/upload"
+				hx-encoding="multipart/form-data"
+				hx-indicator="#upload-indicator"
+				hx-disabled-elt="find button"
+				class="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+			>
+				<label class="block text-sm">
+					<span class="mb-2 block font-medium text-slate-700">File CSV pesanan marketplace</span>
+					<input type="file" name="file" accept=".csv" required class="block w-full text-sm file:mr-4 file:rounded-md file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:text-emerald-800 hover:file:bg-emerald-100"/>
+				</label>
+				<p class="text-xs text-slate-500">Format .csv, maksimal { strconv.Itoa(maxMB) } MB.</p>
+				<div class="flex items-center gap-3">
+					<button type="submit" class="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50">Unggah</button>
+					<span id="upload-indicator" class="htmx-indicator text-sm text-slate-500">Memproses file…</span>
+				</div>
+			</form>
+		</div>
+	}
+}

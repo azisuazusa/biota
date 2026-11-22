@@ -1,0 +1,16 @@
+﻿Order_ID, Order_Date ,CHANNEL,SKU,Product_Name,QTY,Unit_Price,Total_Price,Buyer_City,Status
+SHP1,2026-10-05 10:00,Shopee,BIO-A,Produk A,1,Rp100.000,Rp100.000,Jakarta,Selesai
+SHP2,2026/13/45,Shopee,BIO-A,Produk A,1,Rp100.000,Rp100.000,Jakarta,Selesai
+SHP3,2026-10-05 10:00,Lazada,BIO-A,Produk A,1,Rp100.000,Rp100.000,Jakarta,Selesai
+SHP4,2026-10-05 10:00,Shopee,BIO-A,Produk A,0,Rp100.000,Rp100.000,Jakarta,Selesai
+SHP5,2026-10-05 10:00,Shopee,BIO-A,Produk A,abc,Rp100.000,Rp100.000,Jakarta,Selesai
+SHP6,2026-10-05 10:00,Shopee,BIO-A,Produk A,1,Rp-,Rp100.000,Jakarta,Selesai
+,2026-10-05 10:00,Shopee,BIO-A,Produk A,1,Rp100.000,Rp100.000,Jakarta,Selesai
+SHP7,2026-10-05 11:00,Shopee,,Produk Misterius,1,Rp50.000,Rp50.000,Surabaya,Selesai
+TKP8,"Oct 06, 2026",Tokopedia,BIO-B,Produk Ganda,1,"IDR 200,000","IDR 200,000",Medan,Selesai
+TKP9,"Oct 06, 2026",tokped,BIO-C,Produk Ganda,1,"200,000","200,000",Medan,Selesai
+TKP10,"Oct 07, 2026",TOKOPEDIA,,Produk Ganda,1,200000,200000,Medan,Selesai
+TTS11,06/10/2026 12:00:00,TikTok Shop,BIO-A,Produk A,1,Rp 100.000,Rp 100.000,Depok,Menunggu Pembayaran
+SHP12,2026-10-08 09:00,Shopee,BIO-A,Produk A,2,Rp100.000,Rp150.000,Bogor,Selesai
+TKP123,2026-10-08 10:00,Shopee,BIO-A,Produk A,1,Rp100.000,Rp100.000,Bekasi,Selesai
+XYZ1,"Oct 09, 2026",Tokopedia,BIO-A,Produk A,1,Rp100.000,Rp100.000,Tangerang,Selesai

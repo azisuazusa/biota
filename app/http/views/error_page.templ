@@ -1,0 +1,14 @@
+package views
+
+import "github.com/azisuazusa/biota/app/http/views/components"
+
+// ErrorPage is the full-page fallback for errors on non-HTMX requests.
+templ ErrorPage(msg string) {
+	@Layout("Terjadi Kesalahan", "") {
+		@components.Flash(msg)
+		<div class="flex gap-3 text-sm">
+			<a href="/" class="text-emerald-700 hover:underline">Kembali ke Dashboard</a>
+			<a href="/upload" class="text-emerald-700 hover:underline">Unggah Data</a>
+		</div>
+	}
+}

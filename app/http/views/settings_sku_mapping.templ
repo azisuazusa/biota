@@ -1,0 +1,67 @@
+package views
+
+import "github.com/azisuazusa/biota/services/sales"
+
+templ SKUMappingSettingsPage(cfg *sales.Config) {
+	@Layout("Pemetaan SKU", "sku-mapping") {
+		<h1 class="mb-1 text-2xl font-semibold text-slate-900">Pemetaan SKU</h1>
+		<p class="mb-6 text-sm text-slate-500">Pemetaan nama produk ke SKU untuk baris dengan SKU kosong. Berlaku untuk unggahan berikutnya; data saat ini tidak diproses ulang.</p>
+		@SKUMappingTable(cfg)
+	}
+}
+
+templ SKUMappingTable(cfg *sales.Config) {
+	<div id="sku-mapping-table" class="space-y-6">
+		@Section("Pemetaan") {
+			if len(cfg.NameToSKU) == 0 {
+				<p class="py-6 text-center text-sm text-slate-500">Belum ada pemetaan.</p>
+			} else {
+				<div class="overflow-x-auto">
+					<table class="w-full text-sm">
+						<thead class="text-left text-slate-500">
+							<tr><th class="py-2 pr-3 font-medium">Nama produk</th><th class="py-2 pr-3 font-medium">SKU</th><th class="py-2 text-right font-medium">Hapus</th></tr>
+						</thead>
+						<tbody class="divide-y divide-slate-100">
+							for _, m := range MappingRows(cfg) {
+								<tr>
+									<td class="py-2 pr-3">{ m.ProductName }</td>
+									<td class="py-2 pr-3">
+										<input
+											type="text"
+											name="sku"
+											value={ m.SKU }
+											required
+											maxlength="64"
+											hx-post="/settings/sku-mapping"
+											hx-trigger="change"
+											hx-vals={ kv("product_name", m.ProductName) }
+											hx-target="#sku-mapping-table"
+											hx-swap="outerHTML"
+											class="w-48 rounded-md border border-slate-300 px-2 py-1.5 font-mono text-xs"
+										/>
+									</td>
+									<td class="py-2 text-right">
+										@inlineDelete("/settings/sku-mapping", kv("product_name", m.ProductName), "#sku-mapping-table")
+									</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			}
+		}
+		@Section("Tambah pemetaan") {
+			<form hx-post="/settings/sku-mapping" hx-target="#sku-mapping-table" hx-swap="outerHTML" class="flex flex-wrap items-end gap-3 text-sm">
+				<label>
+					<span class="mb-1 block text-slate-500">Nama produk</span>
+					<input type="text" name="product_name" required class="w-96 max-w-full rounded-md border border-slate-300 px-2 py-1.5"/>
+				</label>
+				<label>
+					<span class="mb-1 block text-slate-500">SKU</span>
+					<input type="text" name="sku" required maxlength="64" class="w-48 rounded-md border border-slate-300 px-2 py-1.5"/>
+				</label>
+				<button type="submit" class="rounded-md bg-emerald-600 px-4 py-1.5 font-medium text-white hover:bg-emerald-700">Tambah</button>
+			</form>
+		}
+	</div>
+}
