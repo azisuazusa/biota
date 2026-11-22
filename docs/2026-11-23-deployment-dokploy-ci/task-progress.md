@@ -92,3 +92,12 @@ Publishing a stable `vX.Y.Z` GitHub Release builds `ghcr.io/azisuazusa/biota:<ta
 - [ ] Redeploy in Dokploy (`POST /application.deploy`) → dashboard still shows Rp360.363.000 (the volume persists `dataset.json` + `config.json`)
 - [ ] Prerelease check: `gh release create v1.0.1-rc.1 --prerelease --notes "test"` → `gate` skips build/deploy; then delete that release and tag (`gh release delete v1.0.1-rc.1 --cleanup-tag -y`)
 - [x] `gh run view --log` of the release run contains no secret values (the API key is masked as `***`) — _run 45071109922 log: 0 occurrences of the key_
+
+---
+
+## Phase 7 — Post-launch releases ✅ DONE
+
+- [x] `app/http/views/layout.templ`: settings links (Status, Produk, Pemetaan SKU) grouped under an Alpine "Pengaturan" dropdown (user request after go-live) — _commit be51568; closes on click-outside/Escape; button + current item highlighted on settings pages; `make test` + lint pass_
+- [x] `gh release create v1.0.1 --target main --title "v1.0.1" --generate-notes -R azisuazusa/biota` — _run 45071973088: gate/test/build/deploy all success_
+- [x] `GET /application.one`: `dockerImage` = `ghcr.io/azisuazusa/biota:v1.0.1`, status `done`
+- [x] Live check: `https://biota.azis.works/healthz` → 200; `/settings/status` HTML contains the dropdown (`aria-haspopup="menu"`, menu items Status / Produk / Pemetaan SKU) — _open/close interaction not yet clicked through in a browser_
