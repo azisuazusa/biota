@@ -5,7 +5,8 @@ FROM golang:1.26-alpine AS build
 ARG TEMPL_VERSION=v0.3.977
 ARG TAILWIND_VERSION=v4.3.5
 ARG TARGETARCH
-RUN apk add --no-cache curl ca-certificates
+# libstdc++ + libgcc: required by the Tailwind musl standalone binary
+RUN apk add --no-cache curl ca-certificates libstdc++ libgcc
 RUN go install github.com/a-h/templ/cmd/templ@${TEMPL_VERSION}
 RUN case "${TARGETARCH:-amd64}" in \
       arm64) TW_ARCH=arm64 ;; \
