@@ -149,6 +149,12 @@ Keputusan berikut diambil saat diskusi kebutuhan, berdasarkan kondisi data di fi
 
 ---
 
+## Tiga hal yang salah dikerjakan oleh AI
+- Related UI, harusnya bisa lebih oke navbarnya (Grouping Pengaturan). Ketemu kesalahannya setelah run dashbordnya di local.
+<img width="787" height="61" alt="image" src="https://github.com/user-attachments/assets/09dfbc1a-ece2-423c-a7d9-9972b05d261c" />
+
+---
+
 ## Penyimpanan Data
 
 `DATA_DIR` berisi dua file JSON yang ditulis secara atomik:
