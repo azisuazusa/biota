@@ -153,6 +153,8 @@ Keputusan berikut diambil saat diskusi kebutuhan, berdasarkan kondisi data di fi
 - Related UI, harusnya bisa lebih oke navbarnya (Grouping Pengaturan). Ketemu kesalahannya setelah run dashbordnya di local.
 <img width="787" height="61" alt="image" src="https://github.com/user-attachments/assets/09dfbc1a-ece2-423c-a7d9-9972b05d261c" />
 
+- **CSS dan JS 404 di versi deploy.** Ketemu setelah mengecek aplikasi yang sudah di-deploy di https://biota.azis.works: tampilan tanpa styling dan grafik tidak muncul, karena `/static/css/app.css` dan file JS mengembalikan 404. Di lokal semuanya normal. Penyebabnya, AI menulis server yang membaca folder `static` dengan path relatif (`http.Dir("static")`), sementara di `Dockerfile` folder itu disalin ke `/static`. Base image `distroless:nonroot` menjalankan aplikasi dari `/home/nonroot`, jadi server mencari di `/home/nonroot/static` yang tidak ada. Health check `/healthz` tetap lolos, sehingga CI dan deploy terlihat sukses. Diperbaiki dengan menambahkan `WORKDIR /` di tahap runtime `Dockerfile`, lalu dirilis sebagai `v1.0.2`.
+
 ---
 
 ## Rencana Selanjutnya

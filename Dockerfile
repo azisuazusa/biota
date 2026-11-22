@@ -27,6 +27,8 @@ RUN templ generate && \
 
 # ---- runtime ----
 FROM gcr.io/distroless/static-debian12:nonroot
+# The base image defaults to /home/nonroot; the server serves ./static, so run from /.
+WORKDIR /
 COPY --from=build /out/server /server
 COPY --from=build /src/static /static
 # Pre-create /data owned by nonroot so a fresh named volume is writable.
