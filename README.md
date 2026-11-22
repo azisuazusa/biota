@@ -155,6 +155,27 @@ Keputusan berikut diambil saat diskusi kebutuhan, berdasarkan kondisi data di fi
 
 ---
 
+## Rencana Selanjutnya
+
+Jika ada lebih banyak waktu, saya akan:
+
+- Mengganti penyimpanan file JSON dengan database yang proper (PostgreSQL).
+- Menyimpan riwayat data (history), sehingga unggahan baru tidak lagi menggantikan seluruh data sebelumnya.
+- Menambahkan login dengan OAuth.
+
+---
+
+## Tools dan Model AI
+
+| Tool | Nama dan versi model AI | Dipakai untuk |
+|---|---|---|
+| Claude Code | Claude Opus 5.5 | Hampir semua pekerjaan: diskusi kebutuhan dan perencanaan, implementasi, test, CI/CD, dan deployment |
+| Neovim | — | Mereview rencana dan kode |
+
+Satu-satunya bagian yang dikerjakan tanpa AI adalah pengaturan DNS untuk `biota.azis.works`.
+
+---
+
 ## Penyimpanan Data
 
 `DATA_DIR` berisi dua file JSON yang ditulis secara atomik:
