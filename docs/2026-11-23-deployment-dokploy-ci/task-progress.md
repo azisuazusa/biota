@@ -69,26 +69,26 @@ Publishing a stable `vX.Y.Z` GitHub Release builds `ghcr.io/azisuazusa/biota:<ta
 
 ## Phase 5 — Go-live
 
-- [ ] `.gitignore`: confirm it excludes `bin/`, `.data/`, `*_templ.go`, `static/css/app.css`, `.env*`, `.DS_Store`
-- [ ] `git init -b main` in `/Users/azisuazusa/Projects/biota`
-- [ ] `git status`: review the staged file list; make sure no secrets, `.data/`, binaries or `.claude/settings.local.json` are included
-- [ ] Initial commit: `git add -A && git commit` with message `Initial commit: BIOTA marketplace sales insight app + CI/CD` ending with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`
-- [ ] `git remote add origin git@github.com:azisuazusa/biota.git && git push -u origin main`
-- [ ] Optional sanity check: open a throwaway PR (e.g. a README typo branch) to see `pr.yml` go green, then close it. Skip if the owner prefers, with a note
-- [ ] `gh release create v1.0.0 --title "v1.0.0" --generate-notes -R azisuazusa/biota`
-- [ ] `gh run watch` on the `release` run: gate → test → build → deploy
-- [ ] GHCR visibility: anonymously check `TOKEN=$(curl -s "https://ghcr.io/token?scope=repository:azisuazusa/biota:pull" | jq -r .token)`; `curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.v2+json' https://ghcr.io/v2/azisuazusa/biota/manifests/v1.0.0` → expect `200`
-  - [ ] If not 200: ask the owner to set the package public at `https://github.com/users/azisuazusa/packages/container/biota/settings`, then re-check and `gh run rerun <run-id> --failed`
+- [x] `.gitignore`: confirm it excludes `bin/`, `.data/`, `*_templ.go`, `static/css/app.css`, `.env*`, `.DS_Store` — _added `.env*`, `.DS_Store`, `.claude/settings.local.json`_
+- [x] `git init -b main` in `/Users/azisuazusa/Projects/biota`
+- [x] `git status`: review the staged file list; make sure no secrets, `.data/`, binaries or `.claude/settings.local.json` are included — _77 files; scanned for secrets and real order IDs: none. Real CSV replaced by synthetic `test_data/sample_orders_oct2026.csv` (user decision)_
+- [x] Initial commit: `git add -A && git commit` with message `Initial commit: BIOTA marketplace sales insight app + CI/CD` ending with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` — _commit a8f381b_
+- [x] `git remote add origin git@github.com:azisuazusa/biota.git && git push -u origin main`
+- [ ] Optional sanity check: open a throwaway PR (e.g. a README typo branch) to see `pr.yml` go green, then close it. Skip if the owner prefers, with a note — _skipped for now; `pr.yml` passed actionlint and its steps are identical to the `test` job that passed in the release run_
+- [x] `gh release create v1.0.0 --title "v1.0.0" --generate-notes -R azisuazusa/biota` — _first run failed in `build`: Tailwind musl binary needed `libstdc++`/`libgcc` on Alpine → fixed in 158032f; with the user's approval the failed v1.0.0 release + tag were deleted and v1.0.0 recreated on 158032f_
+- [x] `gh run watch` on the `release` run: gate → test → build → deploy — _run 45071109922: gate/test/build/deploy all success_
+- [x] GHCR visibility: anonymously check `TOKEN=$(curl -s "https://ghcr.io/token?scope=repository:azisuazusa/biota:pull" | jq -r .token)`; `curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.v2+json' https://ghcr.io/v2/azisuazusa/biota/manifests/v1.0.0` → expect `200` — _anonymous manifest GET → 200; package already public, no manual step needed_
+  - [x] If not 200: ask the owner to set the package public at `https://github.com/users/azisuazusa/packages/container/biota/settings`, then re-check and `gh run rerun <run-id> --failed` — _not needed (200)_
 
 ---
 
 ## Phase 6 — QA
 
 - [ ] `pr.yml` ran green on a PR (or noted as skipped in Phase 5)
-- [ ] `release.yml` for `v1.0.0`: all 4 jobs green
-- [ ] `GET /application.one`: `dockerImage` = `ghcr.io/azisuazusa/biota:v1.0.0`, and the latest deployment status is `done`
-- [ ] `curl -sS -o /dev/null -w '%{http_code} %{ssl_verify_result}\n' https://biota.azis.works/healthz` → `200 0` (valid cert)
+- [x] `release.yml` for `v1.0.0`: all 4 jobs green
+- [x] `GET /application.one`: `dockerImage` = `ghcr.io/azisuazusa/biota:v1.0.0`, and the latest deployment status is `done` — _image `ghcr.io/azisuazusa/biota:v1.0.0`, deployment "Release v1.0.0" status `done`_
+- [x] `curl -sS -o /dev/null -w '%{http_code} %{ssl_verify_result}\n' https://biota.azis.works/healthz` → `200 0` (valid cert) — _`200 0`; cert issuer Let's Encrypt YR1, valid until 20 Feb 2027_
 - [ ] Browser: `https://biota.azis.works/` shows the empty state; upload `test_data/sample_orders_oct2026.csv` → confirm → dashboard shows Pendapatan Bersih Rp360.363.000
 - [ ] Redeploy in Dokploy (`POST /application.deploy`) → dashboard still shows Rp360.363.000 (the volume persists `dataset.json` + `config.json`)
 - [ ] Prerelease check: `gh release create v1.0.1-rc.1 --prerelease --notes "test"` → `gate` skips build/deploy; then delete that release and tag (`gh release delete v1.0.1-rc.1 --cleanup-tag -y`)
-- [ ] `gh run view --log` of the release run contains no secret values (the API key is masked as `***`)
+- [x] `gh run view --log` of the release run contains no secret values (the API key is masked as `***`) — _run 45071109922 log: 0 occurrences of the key_
